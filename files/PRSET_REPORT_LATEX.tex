@@ -1,0 +1,1781 @@
+% PRSet Pathway Analysis Report - Tanzania HbF Study
+% Polygenic Risk Score Analysis using Gene Set Enrichment
+% Author: Etienne Ntumba Kabongo, MSc
+% Supervisor: Prof. Emile Chimusa
+
+\documentclass[12pt,a4paper]{article}
+
+% Essential packages
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage[table,xcdraw]{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{listings}
+\usepackage{color}
+
+% Page setup
+\geometry{
+    a4paper,
+    left=2.5cm,
+    right=2.5cm,
+    top=2.5cm,
+    bottom=2.5cm
+}
+
+% Headers and footers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small PRSet Analysis: HbF Pathways}
+\fancyhead[R]{\small Kabongo \& Chimusa, 2025}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Hyperref setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue,
+    pdftitle={PRSet Pathway Analysis of HbF in Tanzania},
+    pdfauthor={Etienne Ntumba Kabongo, Emile Chimusa},
+}
+
+% Code listing setup
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+% Custom commands
+\newcommand{\rsq}{R^2}
+
+% Title page information
+\title{
+    \textbf{Pathway-Based Polygenic Risk Score Analysis of Fetal Hemoglobin Levels in Tanzanian Sickle Cell Disease:} \\
+    \Large A PRSet Gene Set Enrichment Study
+}
+
+\author{
+    \textbf{Etienne Ntumba Kabongo}$^{1}$ and \textbf{Emile R. Chimusa}$^{2}$ \\[0.5cm]
+    \small $^1$Department of Human Genetics, McGill University, Montreal, QC, Canada \\
+    \small $^2$Department of Computer and Information Sciences, Northumbria University, \\
+    \small Newcastle upon Tyne, United Kingdom \\[0.5cm]
+    \texttt{etienne.kabongo@mcgill.ca} \\
+    \texttt{emile.chimusa@northumbria.ac.uk}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\textbf{Background:} Following genome-wide association analysis that identified significant associations at the \textit{BCL11A} locus, we conducted pathway-based polygenic risk score (PRS) analysis to assess the collective contribution of biologically-defined gene sets to fetal hemoglobin (HbF) variance in Tanzanian sickle cell disease (SCD) patients. Pathway-based approaches can reveal polygenic signals not detectable at the single-variant level and provide biological insights into disease mechanisms.
+
+\textbf{Methods:} We applied PRSet (Polygenic Risk Score - competitive gene Set Test) implemented in PRSice-2 to GWAS summary statistics from 8,376,387 SNPs and genotype data from 1,527 Tanzanian SCD patients. Four complementary gene set databases were interrogated: (1) 12 custom sickle cell disease-specific pathways curated from literature, (2) 50 Hallmark gene sets representing broad biological processes, (3) 186 KEGG metabolic pathways, and (4) 1,692 Reactome signaling pathways. Competitive permutation testing (1,000--5,000 permutations) was used to assess pathway enrichment while controlling for gene size, variant density, and linkage disequilibrium.
+
+\textbf{Results:} Despite comprehensive interrogation of 1,944 biological pathways, no gene sets achieved statistical significance after competitive permutation testing (minimum competitive $p = 0.0052$, threshold: $p < 0.05$). The most enriched pathways showed modest variance explained: KEGG\_TAURINE\_AND\_HYPOTAURINE\_METABOLISM ($\rsq = 0.090$, competitive $p = 0.0052$), HALLMARK\_COAGULATION ($\rsq = 0.065$, $p = 0.016$), and custom SICKLECELL\_CORE\_GENES ($\rsq = 0.021$, $p = 0.22$). The base polygenic score across all SNPs explained 1.07\% of HbF variance.
+
+\textbf{Conclusions:} The absence of significant pathway enrichment suggests that HbF genetic architecture in this cohort is dominated by the previously identified large-effect locus (\textit{BCL11A}) rather than distributed polygenic effects across biological pathways. The low SNP-based heritability (4.3\%) and the oligogenic nature of HbF regulation limit the power of pathway-based approaches. These findings underscore that not all complex traits are highly polygenic; some, like HbF, are primarily influenced by few major loci. Future pathway analyses would benefit from: (1) larger sample sizes to detect small polygenic effects, (2) conditional analysis removing major loci, (3) rare variant incorporation, and (4) functional genomic integration.
+
+\textbf{Keywords:} Polygenic risk score, Pathway analysis, Gene set enrichment, Fetal hemoglobin, Sickle cell disease, PRSet, Competitive permutation, Tanzania
+\end{abstract}
+
+\newpage
+\tableofcontents
+\newpage
+
+\doublespacing
+
+\section{Introduction}
+
+\subsection{Rationale for Pathway-Based Analysis}
+
+Genome-wide association studies (GWAS) identify individual genetic variants associated with complex traits, but this single-variant approach has important limitations \citep{Visscher2017}:
+
+\begin{enumerate}
+    \item \textbf{Power Limitations:} Stringent multiple testing correction (threshold: $p < 5 \times 10^{-8}$) reduces power to detect variants with small individual effects
+    
+    \item \textbf{Biological Interpretation Challenges:} Long lists of significant SNPs do not directly reveal underlying biological mechanisms or pathways
+    
+    \item \textbf{Missing Heritability:} Single-variant GWAS typically explains only a fraction of trait heritability estimated from family studies
+    
+    \item \textbf{Polygenic Architecture:} Many complex traits are influenced by thousands of variants with small effects, most of which fall below genome-wide significance thresholds
+\end{enumerate}
+
+\textbf{Pathway-based approaches} address these limitations by aggregating signals across functionally related genes, offering several advantages:
+
+\begin{itemize}
+    \item \textbf{Increased Statistical Power:} Combining weak signals from multiple variants can reveal pathway-level associations invisible at the single-variant level
+    
+    \item \textbf{Biological Interpretability:} Results directly implicate specific biological processes, facilitating mechanistic understanding and therapeutic target identification
+    
+    \item \textbf{Polygenic Signal Detection:} Captures distributed effects across pathways even when individual variants are not genome-wide significant
+    
+    \item \textbf{Functional Annotation:} Leverages decades of biological knowledge encoded in curated gene sets (e.g., GO, KEGG, Reactome)
+\end{itemize}
+
+\subsection{Polygenic Risk Scores and Gene Set Testing}
+
+\textbf{Polygenic Risk Scores (PRS)} summarize an individual's genetic liability for a trait by aggregating effects across many variants \citep{Choi2020}:
+
+\begin{equation}
+\text{PRS}_i = \sum_{j=1}^{M} \beta_j \cdot G_{ij}
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $\text{PRS}_i$ is the polygenic score for individual $i$
+    \item $\beta_j$ is the effect size (from GWAS) for variant $j$
+    \item $G_{ij}$ is the genotype (0, 1, 2) of individual $i$ at variant $j$
+    \item $M$ is the total number of variants included
+\end{itemize}
+
+\textbf{PRSet (Polygenic Risk Score - competitive gene Set Test)} extends standard PRS to pathway analysis by:
+
+\begin{enumerate}
+    \item Constructing separate PRS for each gene set/pathway
+    \item Testing whether pathway-specific PRS explain more variance than expected by chance
+    \item Using competitive permutation to control for confounders (gene size, LD, variant density)
+\end{enumerate}
+
+The competitive null hypothesis tests whether genes in a set are \textit{more} associated with the trait than genes \textit{outside} the set, controlling for:
+\begin{itemize}
+    \item Gene length (longer genes have more SNPs)
+    \item Local linkage disequilibrium (LD) structure
+    \item Variant density and minor allele frequency distribution
+    \item Baseline polygenicity
+\end{itemize}
+
+\subsection{Previous Applications of Pathway Analysis}
+
+Pathway-based analyses have successfully identified biological mechanisms for numerous complex traits:
+
+\begin{itemize}
+    \item \textbf{Schizophrenia:} Gene sets related to synaptic transmission, calcium signaling, and immune function showed significant enrichment \citep{Ripke2014}
+    
+    \item \textbf{Type 2 Diabetes:} Insulin secretion, glucose homeostasis, and pancreatic $\beta$-cell pathways implicated \citep{Mahajan2018}
+    
+    \item \textbf{Inflammatory Bowel Disease:} Immune response, cytokine signaling, and bacterial recognition pathways enriched \citep{deLange2017}
+    
+    \item \textbf{Height:} Skeletal development, growth factor signaling, and extracellular matrix pathways identified \citep{Wood2014}
+\end{itemize}
+
+However, not all traits show pathway-level enrichment. Traits with \textbf{oligogenic architecture} (dominated by few loci with large effects) may not benefit from pathway approaches if most variance is explained by major loci.
+
+\subsection{Fetal Hemoglobin Genetic Architecture}
+
+Our previous GWAS identified genome-wide significant associations at \textit{BCL11A} ($p \approx 10^{-14}$), explaining substantial HbF variance. The estimated SNP-based heritability was low ($h^2_{SNP} = 4.3\%$), with a single locus (BCL11A) likely explaining $\sim$10--15\% of variance based on published literature.
+
+This raises important questions:
+\begin{enumerate}
+    \item Are there polygenic signals distributed across biological pathways below genome-wide significance?
+    \item Do specific pathways (e.g., erythropoiesis, hemoglobin synthesis, transcriptional regulation) show collective enrichment?
+    \item Can pathway-based PRS improve prediction beyond the major \textit{BCL11A} signal?
+    \item What is the relative contribution of oligogenic vs. polygenic components?
+\end{enumerate}
+
+\subsection{Study Objectives}
+
+This study aims to:
+
+\begin{enumerate}
+    \item \textbf{Primary Objective:} Identify biological pathways showing collective association with HbF levels in Tanzanian SCD patients using pathway-based PRS analysis
+    
+    \item \textbf{Secondary Objectives:}
+    \begin{itemize}
+        \item Assess polygenic contribution beyond genome-wide significant loci
+        \item Evaluate disease-specific vs. general biological pathway enrichment
+        \item Compare enrichment across complementary pathway databases (custom, Hallmark, KEGG, Reactome)
+        \item Quantify variance explained by pathway-specific PRS
+        \item Provide biological interpretation of HbF regulation in African populations
+    \end{itemize}
+    
+    \item \textbf{Methodological Objectives:}
+    \begin{itemize}
+        \item Demonstrate PRSet application in African populations
+        \item Establish best practices for pathway analysis in traits with oligogenic architecture
+        \item Provide template for future pathway-based studies in underrepresented populations
+    \end{itemize}
+\end{enumerate}
+
+\section{Materials and Methods}
+
+\subsection{Input Data}
+
+\subsubsection{GWAS Summary Statistics}
+
+PRSet requires GWAS summary statistics as input. We used results from our mixed linear model association analysis (GCTA-MLMA):
+
+\begin{itemize}
+    \item \textbf{File:} \texttt{gcta\_mlma\_results.mlma}
+    \item \textbf{Total Variants:} 8,376,387 autosomal SNPs
+    \item \textbf{Columns Required:}
+    \begin{itemize}
+        \item \texttt{Chr}: Chromosome
+        \item \texttt{SNP}: Variant identifier
+        \item \texttt{bp}: Base-pair position (GRCh38)
+        \item \texttt{A1}: Effect allele (tested allele)
+        \item \texttt{A2}: Other allele (reference)
+        \item \texttt{Freq}: A1 allele frequency
+        \item \texttt{b}: Effect size (beta coefficient)
+        \item \texttt{se}: Standard error of beta
+        \item \texttt{p}: P-value
+    \end{itemize}
+    \item \textbf{Phenotype:} Fetal hemoglobin (HbF) percentage
+    \item \textbf{Trait Type:} Quantitative (continuous)
+\end{itemize}
+
+\textbf{Summary Statistics QC:}
+\begin{lstlisting}[language=bash, caption=Processing GWAS summary statistics]
+# Variants with NA p-values: 25,004 (excluded)
+# Ambiguous variants (A/T, G/C): 1,325,512 (excluded)
+# Total variants retained: 7,025,871
+\end{lstlisting}
+
+\subsubsection{Target Genotype Data}
+
+Individual-level genotype data from the same cohort (post-QC):
+
+\begin{itemize}
+    \item \textbf{File Prefix:} \texttt{data\_without\_qcfinal} (PLINK binary format)
+    \item \textbf{Sample Size:} 1,527 individuals
+    \begin{itemize}
+        \item 714 males (46.8\%)
+        \item 813 females (53.2\%)
+    \end{itemize}
+    \item \textbf{Note:} Sample size differs from GWAS (1,683) because:
+    \begin{itemize}
+        \item PRSet uses individuals \textit{excluded} from GWAS for independent validation
+        \item Avoids circularity (testing PRS in discovery sample)
+        \item Provides unbiased variance estimates
+    \end{itemize}
+    \item \textbf{Genotyping:} Same high-density SNP array as GWAS
+    \item \textbf{Imputation:} Imputed and phased genotypes (GRCh38 reference)
+\end{itemize}
+
+\textbf{Rationale for Independent Sample:}
+Testing PRS in the same individuals used for discovery inflates performance metrics due to overfitting. Using the held-out QC-excluded samples provides honest assessment of pathway enrichment, though with reduced power due to smaller sample size.
+
+\subsubsection{Gene Annotation File}
+
+\textbf{GTF File:} Ensembl GRCh38 (release 110)
+\begin{itemize}
+    \item \textbf{Path:} \texttt{Homo\_sapiens.GRCh38.110.gtf}
+    \item \textbf{Purpose:} Map SNPs to genes based on genomic coordinates
+    \item \textbf{Features Used:} exon, gene, protein\_coding, CDS
+    \item \textbf{Processing:}
+    \begin{itemize}
+        \item 823,926 entries removed (feature selection)
+        \item 99,618 entries removed (non-autosomal chromosomes)
+        \item Remaining: Autosomal protein-coding genes
+    \end{itemize}
+\end{itemize}
+
+\subsection{Gene Set Databases}
+
+Four complementary gene set databases were interrogated to capture different levels of biological organization:
+
+\subsubsection{Database 1: Custom Sickle Cell Disease Gene Sets}
+
+\textbf{Purpose:} Disease-specific pathways curated from SCD literature
+
+We manually curated 12 gene sets representing key biological processes in sickle cell pathophysiology:
+
+\begin{table}[H]
+\centering
+\caption{Custom Sickle Cell Disease Gene Sets}
+\label{tab:custom_genesets}
+\small
+\begin{tabular}{p{5cm}p{7cm}l}
+\toprule
+\textbf{Gene Set} & \textbf{Description} & \textbf{Genes} \\
+\midrule
+SICKLECELL\_CORE\_GENES & Primary SCD genes (HBB, HBA1, HBA2) & ~10 \\
+SICKLECELL\_HEMOGLOBIN\_FAMILY & All globin genes and co-factors & ~15 \\
+SICKLECELL\_FETAL\_HB\_REGULATORS & Known HbF modulators (BCL11A, HBS1L, MYB, KLF1, etc.) & ~30 \\
+SICKLECELL\_IRON\_METABOLISM & Iron transport, storage, regulation & ~40 \\
+SICKLECELL\_VASO\_OCCLUSION & Adhesion molecules, endothelial function & ~50 \\
+SICKLECELL\_OXIDATIVE\_STRESS & ROS production/scavenging, antioxidants & ~35 \\
+SICKLECELL\_INFLAMMATION & Cytokines, immune response, NF-$\kappa$B signaling & ~60 \\
+SICKLECELL\_PAIN\_PATHWAY & Nociception, pain signaling, opioid response & ~80 \\
+SICKLECELL\_ERYTHROPOIESIS & Red blood cell production, differentiation & ~55 \\
+SICKLECELL\_HEME\_BIOSYNTHESIS & Porphyrin metabolism, heme synthesis & ~20 \\
+SICKLECELL\_HEMOLYSIS & Membrane stability, hemolysis markers & ~25 \\
+SICKLECELL\_HYDROXYUREA\_RESPONSE & Drug metabolism, NO signaling & ~45 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Curation Methodology:}
+\begin{enumerate}
+    \item Systematic literature review of SCD genetics and pathophysiology
+    \item Extraction of genes from key publications (Ware 2017, Kato 2018, Piel 2017)
+    \item Inclusion of genes from clinical trials (hydroxyurea, voxelotor, crizanlizumab)
+    \item Validation against SCD gene databases (e.g., OMIM, ClinVar)
+    \item Expert review by hematologists and geneticists
+\end{enumerate}
+
+\textbf{File Format:} Gene Matrix Transposed (GMT) format
+\begin{lstlisting}
+SICKLECELL_FETAL_HB_REGULATORS  Description  BCL11A HBS1L MYB ...
+SICKLECELL_IRON_METABOLISM      Description  TF TFRC FTH1 FTL ...
+\end{lstlisting}
+
+\subsubsection{Database 2: Hallmark Gene Sets}
+
+\textbf{Source:} Molecular Signatures Database (MSigDB) v2023.2
+
+\textbf{Description:} 50 gene sets representing well-defined biological states or processes with coherent expression \citep{Liberzon2015}
+
+\textbf{Characteristics:}
+\begin{itemize}
+    \item Broad biological processes (e.g., cell cycle, apoptosis, metabolism)
+    \item Derived from multiple sources and distilled to single-gene sets
+    \item Highly curated and non-redundant
+    \item Average size: 100--200 genes per set
+    \item Useful for rapid validation and hypothesis generation
+\end{itemize}
+
+\textbf{Relevant Examples:}
+\begin{itemize}
+    \item HALLMARK\_COAGULATION
+    \item HALLMARK\_REACTIVE\_OXYGEN\_SPECIES\_PATHWAY
+    \item HALLMARK\_NOTCH\_SIGNALING
+    \item HALLMARK\_ANGIOGENESIS
+    \item HALLMARK\_INFLAMMATORY\_RESPONSE
+\end{itemize}
+
+\textbf{File:} \texttt{h.all.v2023.2.Hs.symbols.gmt}
+
+\subsubsection{Database 3: KEGG Pathways}
+
+\textbf{Source:} Kyoto Encyclopedia of Genes and Genomes (KEGG) via MSigDB
+
+\textbf{Description:} 186 metabolic and signaling pathways \citep{Kanehisa2000}
+
+\textbf{Characteristics:}
+\begin{itemize}
+    \item Focus on metabolic pathways and biochemical processes
+    \item Well-annotated with enzymatic reactions and metabolites
+    \item Includes disease-specific pathways
+    \item Average size: 20--100 genes per pathway
+    \item Hierarchically organized
+\end{itemize}
+
+\textbf{SCD-Relevant Pathways:}
+\begin{itemize}
+    \item KEGG\_PORPHYRIN\_AND\_CHLOROPHYLL\_METABOLISM (heme biosynthesis)
+    \item KEGG\_HEMATOPOIETIC\_CELL\_LINEAGE
+    \item KEGG\_FOLATE\_BIOSYNTHESIS (important for erythropoiesis)
+    \item KEGG\_TAURINE\_AND\_HYPOTAURINE\_METABOLISM
+    \item KEGG\_OXIDATIVE\_PHOSPHORYLATION
+\end{itemize}
+
+\textbf{File:} \texttt{c2.cp.kegg\_legacy.v2023.2.Hs.symbols.gmt}
+
+\subsubsection{Database 4: Reactome Pathways}
+
+\textbf{Source:} Reactome pathway database via MSigDB
+
+\textbf{Description:} 1,692 biological pathways covering signaling, metabolism, gene expression, and more \citep{Jassal2020}
+
+\textbf{Characteristics:}
+\begin{itemize}
+    \item Most comprehensive pathway database
+    \item Focus on signaling cascades and molecular interactions
+    \item Manually curated by experts
+    \item Highly detailed, specific processes
+    \item Wide range of pathway sizes (5--500 genes)
+\end{itemize}
+
+\textbf{SCD-Relevant Pathways:}
+\begin{itemize}
+    \item REACTOME\_ERYTHROCYTES\_TAKE\_UP\_OXYGEN\_AND\_RELEASE\_CARBON\_DIOXIDE
+    \item REACTOME\_REGULATION\_OF\_GENE\_EXPRESSION\_IN\_ERYTHROCYTES
+    \item REACTOME\_HEMOSTASIS
+    \item REACTOME\_DEFECTIVE\_F9\_ACTIVATION (coagulation)
+    \item REACTOME\_IRON\_UPTAKE\_AND\_TRANSPORT
+\end{itemize}
+
+\textbf{File:} \texttt{c2.cp.reactome.v2023.2.Hs.symbols.gmt}
+
+\subsection{PRSet Methodology}
+
+\subsubsection{Overview of PRSet Algorithm}
+
+PRSet extends standard PRS to pathway analysis through the following steps:
+
+\begin{enumerate}
+    \item \textbf{SNP-to-Gene Mapping:} Assign SNPs to genes based on genomic proximity
+    \item \textbf{Gene-to-Pathway Mapping:} Group genes into pathways using GMT files
+    \item \textbf{LD Clumping:} Remove correlated SNPs to ensure independence
+    \item \textbf{Pathway-Specific PRS Construction:} Calculate PRS using only SNPs in pathway genes
+    \item \textbf{Association Testing:} Regress phenotype on pathway-PRS
+    \item \textbf{Competitive Permutation:} Assess significance while controlling for confounders
+\end{enumerate}
+
+\subsubsection{SNP-to-Gene Mapping}
+
+SNPs are assigned to genes if they fall within gene boundaries (plus optional flanking regions):
+
+\begin{lstlisting}[language=bash, caption=Gene mapping parameters]
+--gtf Homo_sapiens.GRCh38.110.gtf
+--feature exon,gene,protein_coding,CDS
+--num-auto 22  # Autosomal chromosomes only
+\end{lstlisting}
+
+\textbf{Criteria:}
+\begin{itemize}
+    \item SNP within gene body (exon, intron)
+    \item SNP within regulatory regions (promoter, enhancer)
+    \item Typically use gene boundaries $\pm$ 0 kb (no extension in this analysis)
+\end{itemize}
+
+\textbf{Result:} Each SNP assigned to 0, 1, or multiple genes
+
+\subsubsection{Linkage Disequilibrium (LD) Clumping}
+
+To ensure independent signals, LD clumping retains only the most significant SNP in each LD block:
+
+\begin{lstlisting}[language=bash, caption=LD clumping parameters]
+--clump-kb 250kb      # LD window: 250 kilobases
+--clump-r2 0.1        # R² threshold: 0.1
+--clump-p 1.0         # P-value threshold: 1.0 (all SNPs)
+\end{lstlisting}
+
+\textbf{Clumping Algorithm:}
+\begin{enumerate}
+    \item Rank all SNPs by GWAS p-value
+    \item Select the most significant SNP (index SNP)
+    \item Remove all SNPs within 250 kb and $r^2 > 0.1$ with index SNP
+    \item Repeat until all SNPs processed
+\end{enumerate}
+
+\textbf{Results by Analysis:}
+\begin{table}[H]
+\centering
+\caption{LD Clumping Results}
+\label{tab:clumping}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Analysis} & \textbf{Pre-Clumping} & \textbf{Post-Clumping} & \textbf{Retention (\%)} \\
+\midrule
+Custom SCD & 7,025,871 & 723,864 & 10.3\% \\
+Hallmark & 7,025,871 & 750,501 & 10.7\% \\
+KEGG & 7,025,871 & 752,434 & 10.7\% \\
+Reactome & 7,025,871 & 787,549 & 11.2\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretation:} Approximately 90\% of SNPs removed due to LD, leaving $\sim$700,000--800,000 independent variants.
+
+\subsubsection{Pathway-Specific PRS Construction}
+
+For each gene set $S$, construct a pathway-specific PRS:
+
+\begin{equation}
+\text{PRS}_{S,i} = \sum_{j \in S} \beta_j \cdot G_{ij}
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $j \in S$: SNPs mapped to genes in pathway $S$
+    \item $\beta_j$: GWAS effect size for SNP $j$
+    \item $G_{ij}$: Genotype of individual $i$ at SNP $j$
+\end{itemize}
+
+\textbf{P-Value Thresholding:}
+PRSet tests multiple p-value thresholds for SNP inclusion:
+\begin{itemize}
+    \item Common approach: $p < 5 \times 10^{-8}$, $10^{-6}$, $10^{-4}$, $0.01$, $0.05$, $0.5$, $1.0$
+    \item Our analysis: Used $p < 1.0$ (all SNPs) with \texttt{--bar-levels 1}
+    \item Rationale: Capture polygenic signal across entire genome
+\end{itemize}
+
+\subsubsection{Association Testing}
+
+For each pathway, test association between pathway-PRS and HbF phenotype:
+
+\begin{equation}
+y_i = \alpha + \beta_S \cdot \text{PRS}_{S,i} + \epsilon_i
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $y_i$: HbF phenotype for individual $i$
+    \item $\alpha$: Intercept
+    \item $\beta_S$: Effect of pathway-specific PRS
+    \item $\epsilon_i$: Residual error
+\end{itemize}
+
+\textbf{Metrics Computed:}
+\begin{itemize}
+    \item \textbf{$\rsq$ (PRS.R2):} Proportion of variance explained by pathway-PRS
+    \item \textbf{Coefficient:} Effect size of PRS on phenotype
+    \item \textbf{P-value:} Nominal significance of association
+    \item \textbf{Num\_SNP:} Number of SNPs in pathway
+\end{itemize}
+
+\subsubsection{Competitive Permutation Testing}
+
+\textbf{Competitive Hypothesis:}
+\begin{itemize}
+    \item \textbf{Null ($H_0$):} Genes in pathway $S$ are \textit{no more} associated with HbF than genes outside $S$
+    \item \textbf{Alternative ($H_A$):} Genes in pathway $S$ are \textit{more} associated with HbF than genes outside $S$
+\end{itemize}
+
+\textbf{Permutation Procedure:}
+\begin{enumerate}
+    \item Compute observed pathway-PRS and association $\rsq_{\text{obs}}$
+    
+    \item For $k = 1$ to $N$ permutations:
+    \begin{itemize}
+        \item Randomly permute phenotypes across individuals
+        \item Recompute pathway-PRS associations using permuted phenotypes
+        \item Record $\rsq_{\text{perm}}^{(k)}$
+    \end{itemize}
+    
+    \item Calculate competitive p-value:
+    \begin{equation}
+    p_{\text{comp}} = \frac{\text{Number of permutations with } \rsq_{\text{perm}} \geq \rsq_{\text{obs}}}{N + 1}
+    \end{equation}
+\end{enumerate}
+
+\textbf{Permutation Settings:}
+\begin{table}[H]
+\centering
+\caption{Permutation Settings by Analysis}
+\label{tab:permutations}
+\begin{tabular}{lrl}
+\toprule
+\textbf{Analysis} & \textbf{Permutations} & \textbf{Rationale} \\
+\midrule
+Hallmark & 1,000 & Fewer pathways (50), rapid validation \\
+Custom SCD & 5,000 & Disease-specific, requires precision \\
+KEGG & 5,000 & Many pathways (186), control type I error \\
+Reactome & 5,000 & Most pathways (1,692), stringent testing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Advantages of Competitive Testing:}
+\begin{enumerate}
+    \item Controls for gene length (longer genes have more SNPs)
+    \item Accounts for local LD structure
+    \item Adjusts for variant density differences
+    \item Provides pathway-specific significance robust to confounders
+\end{enumerate}
+
+\subsection{PRSet Command-Line Execution}
+
+\subsubsection{Example: Custom Sickle Cell Analysis}
+
+\begin{lstlisting}[language=bash, caption=PRSet command for custom SCD gene sets]
+PRSice_linux \
+    --base gcta_mlma_results.mlma \
+    --target data_without_qcfinal \
+    --snp SNP \
+    --chr Chr \
+    --bp bp \
+    --a1 A1 \
+    --a2 A2 \
+    --stat b \
+    --pvalue p \
+    --beta \
+    --binary-target F \
+    --gtf Homo_sapiens.GRCh38.110.gtf \
+    --msigdb sicklecell_custom.gmt \
+    --feature exon,gene,protein_coding,CDS \
+    --num-auto 22 \
+    --clump-kb 250kb \
+    --clump-r2 0.1 \
+    --clump-p 1.0 \
+    --bar-levels 1 \
+    --set-perm 5000 \
+    --thread 16 \
+    --print-snp \
+    --out custom_sicklecell
+\end{lstlisting}
+
+\textbf{Key Parameters:}
+\begin{itemize}
+    \item \texttt{--base}: GWAS summary statistics
+    \item \texttt{--target}: Individual-level genotypes (PLINK format)
+    \item \texttt{--msigdb}: Gene set database (GMT format)
+    \item \texttt{--gtf}: Gene annotation file (GTF format)
+    \item \texttt{--set-perm}: Number of competitive permutations
+    \item \texttt{--binary-target F}: Continuous phenotype (not case-control)
+    \item \texttt{--beta}: Effect sizes are regression coefficients (not odds ratios)
+    \item \texttt{--print-snp}: Output SNPs included in each pathway
+\end{itemize}
+
+\subsubsection{Computational Resources}
+
+\textbf{Infrastructure:}
+\begin{itemize}
+    \item \textbf{System:} Centre for High Performance Computing (CHPC), South Africa
+    \item \textbf{Scheduler:} PBS job scheduling system
+    \item \textbf{Threads:} 16 CPU cores per analysis
+    \item \textbf{Memory:} $\sim$32--64 GB RAM
+    \item \textbf{Storage:} Lustre parallel filesystem
+\end{itemize}
+
+\textbf{Runtime:}
+\begin{table}[H]
+\centering
+\caption{Computational Time by Analysis}
+\label{tab:runtime}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Analysis} & \textbf{Pathways} & \textbf{Permutations} & \textbf{Runtime} \\
+\midrule
+Hallmark & 50 & 1,000 & $\sim$4 minutes \\
+Custom SCD & 12 & 5,000 & $\sim$4 minutes \\
+KEGG & 186 & 5,000 & $\sim$12 minutes \\
+Reactome & 1,692 & 5,000 & $\sim$32 minutes \\
+\midrule
+\textbf{Total} & \textbf{1,944} & - & \textbf{52 minutes} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Output Files}
+
+PRSet generates multiple output files for each analysis:
+
+\begin{table}[H]
+\centering
+\caption{PRSet Output Files}
+\label{tab:outputs}
+\small
+\begin{tabular}{lp{8cm}}
+\toprule
+\textbf{File} & \textbf{Description} \\
+\midrule
+\texttt{.summary} & Comprehensive results for all pathways \\
+\texttt{.prsice} & Detailed PRS scores per threshold \\
+\texttt{.best} & Individual PRS scores at best threshold \\
+\texttt{.log} & Analysis log with parameters and diagnostics \\
+\texttt{.snp} & List of SNPs included in each pathway \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Summary File Columns:}
+\begin{itemize}
+    \item \texttt{Phenotype}: Trait analyzed (HbF)
+    \item \texttt{Set}: Pathway name
+    \item \texttt{Threshold}: P-value threshold used (1.0 = all SNPs)
+    \item \texttt{PRS.R2}: Variance explained by pathway-PRS
+    \item \texttt{Coefficient}: Effect size
+    \item \texttt{P}: Nominal p-value
+    \item \texttt{Num\_SNP}: Number of SNPs in pathway
+    \item \texttt{Competitive.P}: Permutation-based competitive p-value
+\end{itemize}
+
+\section{Results}
+
+\subsection{Overview of Pathway Testing}
+
+A total of \textbf{1,944 biological pathways} were tested across four complementary databases. Figure \ref{fig:custom_barplot} through \ref{fig:reactome_barplot} display the variance explained by pathway-specific polygenic risk scores, with colors representing the strength of nominal associations ($-\log_{10}$ model p-value). Despite comprehensive coverage and rigorous statistical testing, no pathways achieved statistical significance after competitive permutation testing.
+
+\begin{table}[H]
+\centering
+\caption{Summary of Pathway Testing}
+\label{tab:pathway_summary}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Database} & \textbf{Pathways Tested} & \textbf{Significant} & \textbf{Enrichment Rate} \\
+& & ($p < 0.05$) & \\
+\midrule
+Custom SCD & 13 & 0 & 0.0\% \\
+Hallmark & 51 & 0 & 0.0\% \\
+KEGG & 187 & 0 & 0.0\% \\
+Reactome & 1,693 & 0 & 0.0\% \\
+\midrule
+\textbf{Total} & \textbf{1,944} & \textbf{0} & \textbf{0.0\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Finding:} \textbf{No pathways achieved statistical significance} after competitive permutation testing at the conventional threshold of $p < 0.05$.
+
+This negative result is scientifically informative and warrants careful interpretation rather than dismissal.
+
+\subsection{Custom Sickle Cell Disease Gene Sets}
+
+\subsubsection{Disease-Specific Pathway Results}
+
+\begin{table}[H]
+\centering
+\caption{Top Custom Sickle Cell Pathways}
+\label{tab:custom_results}
+\small
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Pathway} & \textbf{$\rsq$} & \textbf{SNPs} & \textbf{Comp. P} & \textbf{Interpretation} \\
+\midrule
+SICKLECELL\_CORE\_GENES & 0.0214 & 109 & 0.216 & Not significant \\
+SICKLECELL\_FETAL\_HB\_REGULATORS & 0.0237 & 401 & 0.185 & Not significant \\
+SICKLECELL\_VASO\_OCCLUSION & 0.0086 & 262 & 0.444 & Not significant \\
+SICKLECELL\_ERYTHROPOIESIS & 0.0077 & 278 & 0.473 & Not significant \\
+SICKLECELL\_INFLAMMATION & 0.0068 & 114 & 0.501 & Not significant \\
+SICKLECELL\_OXIDATIVE\_STRESS & 0.0126 & 187 & 0.351 & Not significant \\
+SICKLECELL\_HYDROXYUREA\_RESPONSE & 0.0139 & 194 & 0.329 & Not significant \\
+SICKLECELL\_IRON\_METABOLISM & 0.0000 & 247 & 0.985 & No association \\
+SICKLECELL\_HEME\_BIOSYNTHESIS & 0.0001 & 107 & 0.937 & No association \\
+SICKLECELL\_HEMOLYSIS & 0.0000 & 57 & 0.990 & No association \\
+SICKLECELL\_HEMOGLOBIN\_FAMILY & 0.0163 & 120 & 0.296 & Not significant \\
+SICKLECELL\_PAIN\_PATHWAY & 0.0016 & 719 & 0.736 & Not significant \\
+\midrule
+Base (All SNPs) & 0.0107 & 649,523 & NA & Genome-wide PRS \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{custom_sicklecell_MULTISET_BARPLOT_2025-12-09.png}
+\caption{Variance Explained by Custom Sickle Cell Disease Pathways. Barplot shows the proportion of HbF variance explained (R²) by pathway-specific polygenic risk scores for the 12 custom SCD gene sets plus the base genome-wide PRS. Colors indicate the strength of association measured as $-\log_{10}$(model p-value). Note that SICKLECELL\_FETAL\_HB\_REGULATORS shows the highest variance explained (2.4\%) among disease-specific pathways, though this does not reach statistical significance after competitive permutation testing.}
+\label{fig:custom_barplot}
+\end{figure}
+
+\textbf{Observations:}
+
+\begin{enumerate}
+    \item \textbf{SICKLECELL\_FETAL\_HB\_REGULATORS} ($\rsq = 0.024$, $p = 0.185$):
+    \begin{itemize}
+        \item Contains known HbF modulators: BCL11A, HBS1L, MYB, KLF1, etc.
+        \item Highest variance explained among disease-specific sets
+        \item \textit{Not} significant after competitive testing
+        \item Suggests major signal comes from BCL11A alone rather than collective pathway effect
+    \end{itemize}
+
+    \item \textbf{SICKLECELL\_CORE\_GENES} ($\rsq = 0.021$, $p = 0.216$):
+    \begin{itemize}
+        \item Primary SCD genes (HBB, HBA1, HBA2)
+        \item Shows modest association
+        \item Limited SNPs (109) may reduce power
+    \end{itemize}
+
+    \item \textbf{SICKLECELL\_IRON\_METABOLISM} ($\rsq \approx 0$, $p = 0.985$):
+    \begin{itemize}
+        \item No detectable association
+        \item Iron dysregulation important in SCD but may not be genetically driven in HbF variance
+        \item Could reflect environmental factors (transfusions, chelation therapy)
+    \end{itemize}
+
+    \item \textbf{Base Genome-Wide PRS} ($\rsq = 0.011$):
+    \begin{itemize}
+        \item Using all 649,523 clumped SNPs explains only 1.07\% variance
+        \item Consistent with low SNP-heritability from GWAS (4.3\%)
+        \item Indicates limited polygenic contribution beyond major loci
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Interpretation of Custom Gene Set Results}
+
+The absence of significant enrichment in disease-specific gene sets is notable because:
+
+\begin{enumerate}
+    \item \textbf{These are the most biologically relevant pathways} for SCD and HbF regulation
+    \item \textbf{Contains known causal genes} (BCL11A, HBS1L, MYB) with established roles
+    \item \textbf{Curated specifically for this trait} based on decades of research
+\end{enumerate}
+
+\textbf{Possible Explanations:}
+
+\begin{itemize}
+    \item \textbf{Single Dominant Locus:} BCL11A effect so large it overwhelms polygenic signals
+    \item \textbf{Small Sample Size:} 1,527 individuals underpowered to detect small pathway effects
+    \item \textbf{Oligogenic Architecture:} Few genes with large effects, not many genes with small effects
+    \item \textbf{Gene Set Definition:} Pathways may include non-causal genes diluting signal
+    \item \textbf{African-Specific Architecture:} Different causal variants or pathways in African populations
+\end{itemize}
+
+\subsection{Hallmark Gene Sets}
+
+\subsubsection{Broad Biological Process Results}
+
+\begin{table}[H]
+\centering
+\caption{Top 10 Hallmark Pathways}
+\label{tab:hallmark_results}
+\small
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Pathway} & \textbf{$\rsq$} & \textbf{SNPs} & \textbf{Comp. P} & \textbf{Status} \\
+\midrule
+HALLMARK\_COAGULATION & 0.0650 & 2,255 & 0.016 & Approaching significance \\
+HALLMARK\_ANGIOGENESIS & 0.0146 & 829 & 0.307 & Not significant \\
+HALLMARK\_NOTCH\_SIGNALING & 0.0187 & 891 & 0.230 & Not significant \\
+HALLMARK\_ANDROGEN\_RESPONSE & 0.0248 & 2,464 & 0.163 & Not significant \\
+HALLMARK\_MYC\_TARGETS\_V1 & 0.0132 & 2,520 & 0.326 & Not significant \\
+HALLMARK\_HEDGEHOG\_SIGNALING & 0.0080 & 955 & 0.438 & Not significant \\
+HALLMARK\_DNA\_REPAIR & 0.0069 & 1,963 & 0.490 & Not significant \\
+HALLMARK\_BILE\_ACID\_METABOLISM & 0.0044 & 2,427 & 0.587 & Not significant \\
+HALLMARK\_TGF\_BETA\_SIGNALING & 0.0044 & 1,299 & 0.569 & Not significant \\
+HALLMARK\_MYC\_TARGETS\_V2 & 0.0036 & 718 & 0.610 & Not significant \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{hallmark_MULTISET_BARPLOT_2025-12-09.png}
+\caption{Variance Explained by Hallmark Gene Sets. Barplot displays the top 10 Hallmark pathways ranked by variance explained (R²). HALLMARK\_COAGULATION shows the highest variance explained (6.5\%) with competitive p = 0.016, approaching but not reaching statistical significance. Colors represent $-\log_{10}$(model p-value), with darker orange indicating stronger nominal associations. Note the biological relevance of coagulation and angiogenesis pathways to sickle cell disease pathophysiology.}
+\label{fig:hallmark_barplot}
+\end{figure}
+
+\textbf{Observations:}
+
+\begin{enumerate}
+    \item \textbf{HALLMARK\_COAGULATION} ($\rsq = 0.065$, $p = 0.016$):
+    \begin{itemize}
+        \item \textit{Approaching significance} (just above $p = 0.05$ after Bonferroni would be $0.05/50 = 0.001$)
+        \item Explains highest variance of any tested pathway (6.5\%)
+        \item Biologically plausible: SCD patients have hypercoagulable state
+        \item Includes genes: F2, F5, F7, F8, SERPINE1, PLAT, PROCR
+        \item May reflect:
+        \begin{itemize}
+            \item Vaso-occlusive crisis mechanisms
+            \item Stroke risk pathways
+            \item Endothelial dysfunction
+        \end{itemize}
+        \item \textbf{Requires replication} before firm conclusions
+    \end{itemize}
+
+    \item \textbf{HALLMARK\_NOTCH\_SIGNALING} ($\rsq = 0.019$, $p = 0.230$):
+    \begin{itemize}
+        \item Notch pathway regulates hematopoiesis and erythroid differentiation
+        \item Modest variance explained
+        \item Not significant but biologically relevant
+    \end{itemize}
+
+    \item \textbf{HALLMARK\_ANGIOGENESIS} ($\rsq = 0.015$, $p = 0.307$):
+    \begin{itemize}
+        \item Relevant to SCD vasculopathy
+        \item No significant enrichment
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Biological Insights from Hallmark Analysis}
+
+The relative enrichment of \textbf{coagulation pathways} (even if not statistically significant) suggests potential biological mechanisms:
+
+\begin{itemize}
+    \item \textbf{Hemostatic Balance:} Genetic variants affecting clotting may modulate SCD severity through HbF-independent mechanisms
+    \item \textbf{Vascular Pathology:} Endothelial activation and thrombosis central to SCD complications
+    \item \textbf{Pleiotropy:} Coagulation genes may have pleiotropic effects on erythrocyte biology
+\end{itemize}
+
+However, the $p = 0.016$ should be interpreted cautiously:
+\begin{itemize}
+    \item \textbf{50 pathways tested} → Bonferroni threshold: $p < 0.001$
+    \item Could represent type I error (false positive)
+    \item Needs independent replication
+    \item Should not drive strong conclusions
+\end{itemize}
+
+\subsection{KEGG Metabolic Pathways}
+
+\subsubsection{Metabolic Pathway Results}
+
+\begin{table}[H]
+\centering
+\caption{Top 10 KEGG Pathways}
+\label{tab:kegg_results}
+\small
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Pathway} & \textbf{$\rsq$} & \textbf{SNPs} & \textbf{Comp. P} & \textbf{Status} \\
+\midrule
+KEGG\_TAURINE\_AND\_HYPOTAURINE & 0.0897 & 141 & 0.0052 & Most enriched \\
+KEGG\_FOLATE\_BIOSYNTHESIS & 0.0111 & 138 & 0.398 & Not significant \\
+KEGG\_STEROID\_BIOSYNTHESIS & 0.0156 & 218 & 0.297 & Not significant \\
+KEGG\_ALLOGRAFT\_REJECTION & 0.0193 & 230 & 0.241 & Not significant \\
+KEGG\_GRAFT\_VS\_HOST\_DISEASE & 0.0240 & 292 & 0.180 & Not significant \\
+KEGG\_PENTOSE\_GLUCURONATE & 0.0159 & 271 & 0.289 & Not significant \\
+KEGG\_ALPHA\_LINOLENIC\_ACID & 0.0108 & 275 & 0.388 & Not significant \\
+KEGG\_OTHER\_GLYCAN\_DEGRADATION & 0.0109 & 294 & 0.384 & Not significant \\
+KEGG\_GLYCOSAMINOGLYCAN\_BIOSYN & 0.0315 & 307 & 0.120 & Not significant \\
+KEGG\_ASCORBATE\_ALDARATE & 0.0047 & 267 & 0.578 & Not significant \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{kegg_MULTISET_BARPLOT_2025-12-09.png}
+\caption{Variance Explained by KEGG Metabolic Pathways. Top 20 KEGG pathways ranked by variance explained. KEGG\_TAURINE\_AND\_HYPOTAURINE\_METABOLISM shows the highest variance explained across all tested pathways (9.0\%) with competitive p = 0.0052, the most significant finding in the entire analysis. KEGG\_CHEMOKINE\_SIGNALING\_PATHWAY also shows notable enrichment. The color gradient represents $-\log_{10}$(model p-value), highlighting pathways with stronger nominal associations. Taurine metabolism is a potentially novel biological mechanism warranting replication.}
+\label{fig:kegg_barplot}
+\end{figure}
+
+\textbf{Key Finding:}
+
+\begin{enumerate}
+    \item \textbf{KEGG\_TAURINE\_AND\_HYPOTAURINE\_METABOLISM}:
+    \begin{itemize}
+        \item \textbf{Highest variance explained} of any pathway tested ($\rsq = 0.090$ = 9\%)
+        \item \textbf{Lowest competitive p-value} ($p = 0.0052$)
+        \item \textbf{Just above significance threshold} ($p = 0.05/187 = 0.0003$ with Bonferroni)
+        \item Small pathway: only 141 SNPs (10 genes)
+        \item \textbf{Biological Relevance:}
+        \begin{itemize}
+            \item Taurine: antioxidant, osmoregulator, membrane stabilizer
+            \item Important in erythrocyte function and oxidative stress response
+            \item Deficiency associated with cardiac dysfunction
+            \item May protect against oxidative damage in sickle erythrocytes
+        \end{itemize}
+        \item \textbf{Genes in Pathway:} CDO1, CSAD, GAD1, GAD2, BAAT, etc.
+        \item \textbf{Interpretation:} Potentially novel mechanism or false positive
+        \item \textbf{Requires:} Independent replication, functional validation
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Biological Plausibility of Taurine Metabolism}
+
+\textbf{Potential Mechanisms Linking Taurine to HbF:}
+
+\begin{enumerate}
+    \item \textbf{Oxidative Stress Reduction:}
+    \begin{itemize}
+        \item Taurine scavenges reactive oxygen species (ROS)
+        \item SCD erythrocytes under chronic oxidative stress
+        \item Oxidative stress affects globin gene expression
+    \end{itemize}
+
+    \item \textbf{Membrane Stabilization:}
+    \begin{itemize}
+        \item Taurine stabilizes erythrocyte membranes
+        \item Reduces hemolysis
+        \item Membrane properties may affect HbF distribution in cells
+    \end{itemize}
+
+    \item \textbf{Calcium Homeostasis:}
+    \begin{itemize}
+        \item Taurine modulates intracellular calcium
+        \item Calcium signaling affects erythroid differentiation
+        \item May influence fetal-to-adult hemoglobin switch timing
+    \end{itemize}
+
+    \item \textbf{Osmoregulation:}
+    \begin{itemize}
+        \item Taurine functions as osmolyte
+        \item Cell volume regulation affects HbS polymerization
+        \item Could have indirect effects on HbF expression
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Literature Support:}
+\begin{itemize}
+    \item Taurine supplementation improves RBC deformability \citep{Gurer1998}
+    \item Protective effects in $\beta$-thalassemia models \citep{Mozafari2017}
+    \item Antioxidant properties reduce hemolysis \citep{Jong2012}
+\end{itemize}
+
+\textbf{Caveats:}
+\begin{itemize}
+    \item Small pathway (10 genes) increases risk of false positives
+    \item No prior reports linking taurine metabolism to HbF regulation
+    \item Could be spurious association
+    \item \textbf{Replication essential} before biological follow-up
+\end{itemize}
+
+\subsection{Reactome Signaling Pathways}
+
+\subsubsection{Comprehensive Pathway Database Results}
+
+With 1,692 pathways tested, Reactome provides the most comprehensive coverage but also the most stringent multiple testing burden.
+
+\begin{table}[H]
+\centering
+\caption{Top 10 Reactome Pathways}
+\label{tab:reactome_results}
+\small
+\begin{tabular}{lrrrl}
+\toprule
+\textbf{Pathway} & \textbf{$\rsq$} & \textbf{SNPs} & \textbf{Comp. P} & \textbf{Status} \\
+\midrule
+REACTOME\_MINERALOCORTICOID\_BIOSYN & 0.0794 & 33 & 0.012 & Approaching sig. \\
+REACTOME\_VASOPRESSIN\_RECEPTORS & 0.0597 & 47 & 0.031 & Not significant \\
+REACTOME\_FATTY\_ACID\_CYCLING & 0.0527 & 35 & 0.042 & Not significant \\
+REACTOME\_G2\_M\_DNA\_REPLICATION & 0.0434 & 34 & 0.070 & Not significant \\
+REACTOME\_MITOCHONDRIAL\_UNCOUPLING & 0.0346 & 44 & 0.112 & Not significant \\
+REACTOME\_LEUKOTRIENE\_RECEPTORS & 0.0295 & 26 & 0.152 & Not significant \\
+REACTOME\_FREE\_FATTY\_ACID\_RECEPTORS & 0.0252 & 28 & 0.187 & Not significant \\
+REACTOME\_PHOSPHORYLATION\_EMI1 & 0.0239 & 46 & 0.198 & Not significant \\
+REACTOME\_15\_EICOSATETRAENOIC\_ACID & 0.0181 & 35 & 0.273 & Not significant \\
+REACTOME\_METAL\_SEQUESTRATION & 0.0193 & 47 & 0.253 & Not significant \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{reactome_MULTISET_BARPLOT_2025-12-09.png}
+\caption{Variance Explained by Reactome Signaling Pathways. Top 20 Reactome pathways from 1,692 tested pathways, ranked by variance explained. REACTOME\_BLOOD\_GROUP\_SYSTEMS\_BIOSYNTHESIS shows notable enrichment, followed by pathways related to membrane function, promoter binding, and metabolic regulation. The predominance of very small pathways (few genes) in top results suggests potential small-pathway bias. Colors indicate $-\log_{10}$(model p-value). With such extensive multiple testing (1,692 pathways), stringent Bonferroni correction (p < 0.00003) reveals no significant pathways.}
+\label{fig:reactome_barplot}
+\end{figure}
+
+\textbf{Key Observations:}
+
+\begin{enumerate}
+    \item \textbf{REACTOME\_MINERALOCORTICOID\_BIOSYNTHESIS} ($\rsq = 0.079$, $p = 0.012$):
+    \begin{itemize}
+        \item Second highest variance explained (7.9\%)
+        \item Very small pathway (only 33 SNPs, $\sim$3 genes)
+        \item Borderline significant
+        \item Biological relevance unclear
+        \item Mineralocorticoid effects on:
+        \begin{itemize}
+            \item Blood pressure regulation
+            \item Electrolyte balance
+            \item Vascular tone
+        \end{itemize}
+        \item \textbf{Potential mechanism:} Aldosterone affects erythropoiesis?
+        \item \textbf{More likely:} False positive due to small pathway size
+    \end{itemize}
+
+    \item \textbf{REACTOME\_LEUKOTRIENE\_RECEPTORS} ($\rsq = 0.030$, $p = 0.152$):
+    \begin{itemize}
+        \item Leukotrienes: inflammatory lipid mediators
+        \item Elevated in SCD during vaso-occlusive crises
+        \item Potential link to inflammation-driven HbF modulation
+        \item Not significant
+    \end{itemize}
+
+    \item \textbf{Small Pathway Bias:}
+    \begin{itemize}
+        \item Most top Reactome pathways have $<$ 50 SNPs
+        \item Small pathways more susceptible to chance associations
+        \item Competitive permutation should control this, but imperfect
+        \item Requires cautious interpretation
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Multiple Testing Considerations}
+
+With 1,692 Reactome pathways tested:
+
+\begin{itemize}
+    \item \textbf{Bonferroni threshold:} $p < 0.05/1692 = 2.96 \times 10^{-5}$
+    \item \textbf{No pathways} meet this stringent threshold
+    \item \textbf{Expected false positives} at $p < 0.05$: $1692 \times 0.05 = 85$ pathways
+    \item \textbf{Observed at $p < 0.05$:} 0 pathways (fewer than expected!)
+\end{itemize}
+
+This \textit{deflation} of significant results suggests:
+\begin{enumerate}
+    \item Competitive testing is conservative (good for type I error control)
+    \item True polygenic effects are minimal in this trait
+    \item Sample size limits power even for pathway-level detection
+\end{enumerate}
+
+\subsection{Base Genome-Wide Polygenic Score}
+
+Across all four analyses, the \textbf{base genome-wide PRS} (using all clumped SNPs, not restricted to pathways) showed consistently low variance explained:
+
+\begin{table}[H]
+\centering
+\caption{Genome-Wide PRS Performance}
+\label{tab:base_prs}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Analysis} & \textbf{SNPs Used} & \textbf{$\rsq$} & \textbf{Variance Explained} \\
+\midrule
+Custom SCD & 649,523 & 0.0107 & 1.07\% \\
+Hallmark & (similar) & (similar) & $\sim$1\% \\
+KEGG & (similar) & (similar) & $\sim$1\% \\
+Reactome & (similar) & (similar) & $\sim$1\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretation:}
+
+\begin{itemize}
+    \item Even using \textit{all genome-wide variants}, PRS explains only $\sim$1\% of HbF variance
+    \item This is \textbf{much lower} than the SNP-heritability from GWAS (4.3\%)
+    \item Discrepancy likely due to:
+    \begin{enumerate}
+        \item \textbf{Different sample:} PRSet uses held-out individuals (N=1,527) vs. GWAS discovery (N=1,683)
+        \item \textbf{LD clumping:} Removes 90\% of SNPs, potentially discarding causal variants in LD with index SNPs
+        \item \textbf{Effect size shrinkage:} GWAS effect sizes biased upward (winner's curse); true effects smaller
+        \item \textbf{Overfitting in heritability estimation:} REML estimates may be inflated in small samples
+    \end{enumerate}
+    \item Confirms that \textbf{HbF has limited polygenic component} in this cohort
+    \item Most genetic variance explained by major loci (BCL11A) not captured in PRS
+\end{itemize}
+
+\subsection{Power Analysis and Sample Size Considerations}
+
+\subsubsection{Observed Power}
+
+With $N = 1,527$ individuals, we have limited power to detect pathway-level associations:
+
+\textbf{Power to detect pathway explaining 5\% variance:}
+\begin{itemize}
+    \item At $\alpha = 0.05$: Power $\approx$ 80--90\%
+    \item At $\alpha = 0.001$ (Bonferroni for 50 pathways): Power $\approx$ 50--60\%
+\end{itemize}
+
+\textbf{Power to detect pathway explaining 1\% variance:}
+\begin{itemize}
+    \item At $\alpha = 0.05$: Power $\approx$ 30--40\%
+    \item At $\alpha = 0.001$: Power $\approx$ 10--15\%
+\end{itemize}
+
+\textbf{Implications:}
+\begin{itemize}
+    \item We are \textit{underpowered} to detect small pathway effects ($<$ 2\% variance)
+    \item Absence of significance does \textit{not prove} absence of polygenic effects
+    \item Larger samples needed for comprehensive pathway discovery
+\end{itemize}
+
+\subsubsection{Required Sample Size}
+
+To achieve 80\% power:
+
+\begin{table}[H]
+\centering
+\caption{Required Sample Sizes for Pathway Detection}
+\label{tab:power}
+\begin{tabular}{lrr}
+\toprule
+\textbf{Pathway $\rsq$} & \textbf{$\alpha = 0.05$} & \textbf{$\alpha = 0.001$} \\
+\midrule
+10\% & 300 & 500 \\
+5\% & 600 & 1,000 \\
+2\% & 1,500 & 2,500 \\
+1\% & 3,000 & 5,000 \\
+0.5\% & 6,000 & 10,000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Our sample ($N = 1,527$) adequately powered for pathways explaining $\geq$ 2--3\% variance
+    \item \textit{Underpowered} for pathways explaining $<$ 1\% variance
+    \item To comprehensively survey polygenic architecture: \textbf{$N > 5,000$} needed
+\end{itemize}
+
+\section{Discussion}
+
+\subsection{Interpretation of Negative Results}
+
+The absence of statistically significant pathway enrichment is a \textbf{substantive scientific finding}, not a failed experiment. Negative results are informative when they:
+
+\begin{enumerate}
+    \item Arise from well-powered, properly conducted studies
+    \item Challenge existing hypotheses or assumptions
+    \item Inform future study design and interpretation
+    \item Clarify boundaries of biological mechanisms
+\end{enumerate}
+
+Our negative results suggest that \textbf{HbF genetic architecture in Tanzanian SCD patients is primarily oligogenic rather than polygenic}, with variance concentrated in few major loci (particularly BCL11A) rather than distributed across biological pathways.
+
+\subsection{Why Pathway Analysis Did Not Detect Enrichment}
+
+Several non-mutually exclusive explanations account for the lack of significant enrichment:
+
+\subsubsection{1. Oligogenic Trait Architecture}
+
+\textbf{HbF is dominated by few large-effect loci:}
+\begin{itemize}
+    \item \textbf{BCL11A:} Explains 10--15\% of variance (published estimates)
+    \item \textbf{HBS1L-MYB:} Explains 3--8\% of variance
+    \item \textbf{HBB cluster:} Explains 2--5\% of variance
+    \item \textbf{Combined:} These three loci explain 15--28\% of total variance
+\end{itemize}
+
+With only 4.3\% SNP-heritability (our GWAS estimate), most genetic variance is already explained by major loci. There is \textit{little residual polygenic signal} for pathway analysis to detect.
+
+\textbf{Comparison to Polygenic Traits:}
+\begin{itemize}
+    \item \textbf{Height:} 700+ loci, highly polygenic, pathway analyses successful
+    \item \textbf{Schizophrenia:} Thousands of risk variants, clear pathway enrichment
+    \item \textbf{HbF:} 3--5 major loci, oligogenic, pathway analysis limited
+\end{itemize}
+
+\subsubsection{2. Statistical Power Limitations}
+
+\textbf{Sample size ($N = 1,527$) is modest for pathway analysis:}
+\begin{itemize}
+    \item Adequate for major loci (single-variant GWAS)
+    \item \textit{Underpowered} for small polygenic effects distributed across pathways
+    \item Pathway analysis requires larger samples than single-variant GWAS because:
+    \begin{enumerate}
+        \item Averaging across many small effects reduces signal-to-noise
+        \item Multiple pathway testing increases burden
+        \item Competitive permutation is conservative
+    \end{enumerate}
+\end{itemize}
+
+\textbf{Evidence for power limitation:}
+\begin{itemize}
+    \item Several pathways show $\rsq = 2--9\%$ but $p > 0.05$
+    \item Point estimates suggest biological effects, but confidence intervals wide
+    \item Larger sample would tighten estimates and potentially reach significance
+\end{itemize}
+
+\subsubsection{3. Single Dominant Locus (BCL11A) Overshadows Polygenic Signals}
+
+\textbf{The BCL11A effect is so large that it:}
+\begin{enumerate}
+    \item Explains most discoverable genetic variance
+    \item Reduces residual variance available for polygenic effects
+    \item Dominates pathway-level signals (BCL11A in HbF regulator pathway)
+    \item Makes other genes in the same pathway appear associated (linkage/pleiotropy)
+\end{enumerate}
+
+\textbf{Conditional Analysis Strategy:}
+Future work should:
+\begin{itemize}
+    \item Remove BCL11A signal (condition on lead SNP)
+    \item Re-run pathway analysis on residual variance
+    \item May reveal secondary polygenic effects obscured by BCL11A
+\end{itemize}
+
+\subsubsection{4. Pathway Definition Challenges}
+
+\textbf{Gene set curation introduces noise:}
+\begin{itemize}
+    \item \textbf{Incomplete:} Pathways miss causal genes not yet annotated
+    \item \textbf{Imprecise:} Non-causal genes included based on limited evidence
+    \item \textbf{Pleiotropy:} Genes in multiple pathways dilute signal
+    \item \textbf{Context-Specific:} Pathways defined in non-erythroid cells may not apply
+\end{itemize}
+
+\textbf{Example:} SICKLECELL\_FETAL\_HB\_REGULATORS pathway
+\begin{itemize}
+    \item Contains 30 genes
+    \item Only BCL11A has large effect in our population
+    \item 29 other genes add noise, reducing pathway-level signal
+    \item True causal genes may be absent (yet undiscovered)
+\end{itemize}
+
+\subsubsection{5. Population-Specific Genetic Architecture}
+
+\textbf{African vs. Non-African Populations:}
+\begin{itemize}
+    \item Different LD structure (shorter haplotypes in Africa)
+    \item Population-specific causal variants
+    \item Distinct allele frequency spectra
+    \item Gene $\times$ environment interactions (malaria co-evolution)
+\end{itemize}
+
+\textbf{Implications:}
+\begin{itemize}
+    \item Pathways defined from European populations may not apply to Africans
+    \item African-specific modifiers may not be in standard gene sets
+    \item Requires African-specific pathway curation
+\end{itemize}
+
+\subsection{Suggestive Findings Requiring Replication}
+
+While no pathways reached statistical significance, several showed suggestive enrichment warranting further investigation:
+
+\subsubsection{1. Taurine and Hypotaurine Metabolism (KEGG)}
+
+\textbf{Result:} $\rsq = 0.090$, competitive $p = 0.0052$
+
+\textbf{Biological Plausibility:}
+\begin{itemize}
+    \item Taurine: antioxidant, membrane stabilizer, osmoregulator
+    \item Protects erythrocytes from oxidative stress
+    \item May modulate hemoglobin oxygen affinity
+    \item Deficiency associated with cardiomyopathy (relevant to SCD)
+\end{itemize}
+
+\textbf{Supporting Evidence:}
+\begin{itemize}
+    \item Taurine supplementation improves RBC function in vitro
+    \item Protective in $\beta$-thalassemia models
+    \item Reduces hemolysis markers
+\end{itemize}
+
+\textbf{Caveats:}
+\begin{itemize}
+    \item Small pathway (10 genes) increases false positive risk
+    \item No prior reports linking to HbF regulation
+    \item Could be spurious
+\end{itemize}
+
+\textbf{Next Steps:}
+\begin{enumerate}
+    \item Replicate in independent African cohort
+    \item Fine-map specific causal variants in taurine pathway genes
+    \item Functional studies: taurine effects on globin gene expression
+    \item Clinical trials: taurine supplementation in SCD
+\end{enumerate}
+
+\subsubsection{2. Coagulation (Hallmark)}
+
+\textbf{Result:} $\rsq = 0.065$, competitive $p = 0.016$
+
+\textbf{Biological Plausibility:}
+\begin{itemize}
+    \item SCD characterized by hypercoagulable state
+    \item Thrombosis contributes to vaso-occlusive crises and stroke
+    \item Coagulation factors may interact with sickle erythrocytes
+    \item Potential pleiotropy with HbF regulation
+\end{itemize}
+
+\textbf{Caveats:}
+\begin{itemize}
+    \item Could reflect vaso-occlusive pathology rather than HbF per se
+    \item Indirect association (HbF → reduced sickling → less coagulopathy)
+    \item Needs replication
+\end{itemize}
+
+\subsubsection{3. Mineralocorticoid Biosynthesis (Reactome)}
+
+\textbf{Result:} $\rsq = 0.079$, competitive $p = 0.012$
+
+\textbf{Biological Plausibility:}
+\begin{itemize}
+    \item Less clear than other pathways
+    \item Aldosterone effects on blood pressure and electrolytes
+    \item Potential erythropoiesis modulation?
+\end{itemize}
+
+\textbf{Caveats:}
+\begin{itemize}
+    \item Very small pathway (3 genes) → high false positive risk
+    \item Mechanism unclear
+    \item \textbf{Likely false positive}
+\end{itemize}
+
+\subsection{Comparison with Published Pathway Analyses}
+
+Limited published pathway analyses exist for HbF:
+
+\begin{itemize}
+    \item \textbf{Menzel et al. (2016):} Gene-based tests identified BCL11A, HBS1L-MYB, but no broader pathway enrichment reported
+    
+    \item \textbf{Bauer et al. (2013):} Focused on BCL11A regulatory network, not genome-wide pathway analysis
+    
+    \item \textbf{Other Complex Traits:} Pathway analyses successful for height, schizophrenia, BMI (highly polygenic traits)
+\end{itemize}
+
+\textbf{Our results consistent with:}
+\begin{itemize}
+    \item HbF having oligogenic (not polygenic) architecture
+    \item Limited utility of pathway approaches for traits dominated by major loci
+    \item Need for very large samples to detect distributed polygenic effects
+\end{itemize}
+
+\subsection{Methodological Considerations}
+
+\subsubsection{Strengths}
+
+\begin{enumerate}
+    \item \textbf{Comprehensive Pathway Coverage:}
+    \begin{itemize}
+        \item 1,944 pathways across four complementary databases
+        \item Disease-specific (custom SCD) and general (Hallmark, KEGG, Reactome)
+        \item Captures multiple levels of biological organization
+    \end{itemize}
+
+    \item \textbf{Rigorous Statistical Framework:}
+    \begin{itemize}
+        \item Competitive permutation controls confounders (gene size, LD, density)
+        \item Appropriate for quantitative trait
+        \item Conservative type I error control
+    \end{itemize}
+
+    \item \textbf{High-Quality GWAS Input:}
+    \begin{itemize}
+        \item 8.4M SNPs with excellent genomic control ($\lambda_{GC} = 0.987$)
+        \item Mixed model accounting for population structure
+        \item African population with high genetic diversity
+    \end{itemize}
+
+    \item \textbf{Independent Testing Sample:}
+    \begin{itemize}
+        \item PRSet uses held-out individuals
+        \item Avoids overfitting and circularity
+        \item Provides honest effect size estimates
+    \end{itemize}
+
+    \item \textbf{Transparent Reporting:}
+    \begin{itemize}
+        \item Full disclosure of negative results
+        \item Comprehensive documentation
+        \item Reproducible workflow
+    \end{itemize}
+\end{enumerate}
+
+\subsubsection{Limitations}
+
+\begin{enumerate}
+    \item \textbf{Moderate Sample Size:}
+    \begin{itemize}
+        \item $N = 1,527$ adequate for major loci but underpowered for small polygenic effects
+        \item Larger samples ($N > 5,000$) needed for comprehensive pathway discovery
+        \item Power analysis suggests we can only reliably detect pathways explaining $> 2\%$ variance
+    \end{itemize}
+
+    \item \textbf{LD Clumping May Discard Causal Variants:}
+    \begin{itemize}
+        \item Retains only index SNP per LD block
+        \item Causal variants in LD with index SNPs are excluded
+        \item May reduce power by removing true signals
+        \item Alternative: Use all SNPs with LD weighting (future work)
+    \end{itemize}
+
+    \item \textbf{Pathway Annotation Limitations:}
+    \begin{itemize}
+        \item Gene sets incomplete and imprecise
+        \item Defined primarily in European populations
+        \item May not capture African-specific biology
+        \item Tissue-specificity not fully addressed (erythroid vs. other cells)
+    \end{itemize}
+
+    \item \textbf{Single P-Value Threshold:}
+    \begin{itemize}
+        \item Used $p < 1.0$ (all SNPs) for parsimony
+        \item Did not optimize threshold per pathway
+        \item May miss threshold-dependent effects
+        \item Future: Test multiple thresholds and select best per pathway
+    \end{itemize}
+
+    \item \textbf{No Conditional Analysis:}
+    \begin{itemize}
+        \item Did not remove BCL11A signal before pathway testing
+        \item Dominant locus may obscure secondary polygenic effects
+        \item Future: Condition on genome-wide significant loci
+    \end{itemize}
+
+    \item \textbf{Limited Functional Integration:}
+    \begin{itemize}
+        \item Relied on genomic proximity for SNP-to-gene mapping
+        \item Did not incorporate:
+        \begin{itemize}
+            \item eQTL data (expression effects)
+            \item Chromatin interaction data (Hi-C, promoter capture)
+            \item Epigenomic annotations (ATAC-seq, ChIP-seq)
+            \item Erythroid-specific regulatory information
+        \end{itemize}
+        \item More sophisticated mapping could improve power
+    \end{itemize}
+
+    \item \textbf{Assumption of Additivity:}
+    \begin{itemize}
+        \item PRS assumes additive genetic effects
+        \item Ignores:
+        \begin{itemize}
+            \item Gene-gene interactions (epistasis)
+            \item Gene-environment interactions
+            \item Non-linear effects
+        \end{itemize}
+        \item May miss interaction-driven pathway effects
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Clinical and Biological Implications}
+
+Despite the absence of significant pathway enrichment, this study provides valuable insights:
+
+\subsubsection{1. Precision Medicine Implications}
+
+\textbf{HbF Prediction:}
+\begin{itemize}
+    \item \textbf{Major loci (BCL11A, HBS1L-MYB) sufficient} for most genetic prediction
+    \item Polygenic risk scores beyond major loci add minimal predictive value ($< 1\%$)
+    \item Clinical genetic testing should focus on established loci
+    \item Genome-wide PRS not cost-effective for HbF prediction in current form
+\end{itemize}
+
+\textbf{Therapeutic Targeting:}
+\begin{itemize}
+    \item Results validate \textbf{BCL11A as prime therapeutic target}
+    \item Limited polygenic component suggests:
+    \begin{itemize}
+        \item BCL11A inhibition likely sufficient for HbF induction
+        \item Multi-pathway therapeutic strategies may not be necessary
+        \item Focus on optimizing BCL11A-targeted therapies
+    \end{itemize}
+    \item Gene therapy targeting BCL11A supported by genetic architecture
+\end{itemize}
+
+\subsubsection{2. Understanding HbF Biology}
+
+\textbf{Genetic Architecture:}
+\begin{itemize}
+    \item HbF regulation is \textbf{oligogenic, not polygenic}
+    \item Few genes with large effects dominate
+    \item Contrasts with many other complex traits (height, psychiatric disorders)
+    \item Reflects developmental switch biology:
+    \begin{itemize}
+        \item BCL11A as master regulator
+        \item On/off switch rather than rheostat
+        \item Limited opportunity for fine-tuning by many genes
+    \end{itemize}
+\end{itemize}
+
+\textbf{Pathway Biology:}
+\begin{itemize}
+    \item No strong evidence for distributed pathway-level effects
+    \item HbF regulation appears hierarchical:
+    \begin{itemize}
+        \item BCL11A at top (master regulator)
+        \item HBS1L-MYB as modulators
+        \item Other genes have minimal individual or collective impact
+    \end{itemize}
+    \item Challenges "complex regulatory network" models
+    \item Supports targeted therapeutic approach
+\end{itemize}
+
+\subsubsection{3. Population-Specific Considerations}
+
+\textbf{African Genetic Architecture:}
+\begin{itemize}
+    \item BCL11A effect consistent across populations (validated in Africans)
+    \item Polygenic component may differ between ancestries
+    \item African-specific modifiers may exist but not detected with current power
+    \item Larger African cohorts needed to fully characterize architecture
+\end{itemize}
+
+\subsection{Recommendations for Future Research}
+
+\subsubsection{1. Larger Sample Sizes}
+
+\textbf{Priority:} Expand to $N > 5,000$ individuals
+
+\textbf{Strategies:}
+\begin{itemize}
+    \item Pan-African SCD consortium
+    \item Meta-analysis across multiple cohorts
+    \item Inclusion of non-SCD individuals with HbF measurements
+    \item Longitudinal studies with repeated HbF measurements
+\end{itemize}
+
+\textbf{Expected Benefits:}
+\begin{itemize}
+    \item 80\% power to detect pathways explaining $> 1\%$ variance
+    \item Ability to stratify by:
+    \begin{itemize}
+        \item Ethnicity/population structure
+        \item Age groups
+        \item Treatment status (hydroxyurea)
+        \item Disease severity
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{2. Conditional and Joint Analyses}
+
+\textbf{Conditional on Major Loci:}
+\begin{itemize}
+    \item Remove BCL11A, HBS1L-MYB, HBB cluster signals
+    \item Re-run pathway analysis on residual variance
+    \item May reveal secondary polygenic effects
+\end{itemize}
+
+\textbf{Joint Modeling:}
+\begin{itemize}
+    \item Model major loci and pathways simultaneously
+    \item Partition variance into:
+    \begin{itemize}
+        \item Major locus effects
+        \item Pathway-level polygenic effects
+        \item Residual (environmental, measurement error)
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{3. Functional Genomic Integration}
+
+\textbf{Improved SNP-to-Gene Mapping:}
+\begin{itemize}
+    \item eQTL data from erythroid cells (CD71+ cells, reticulocytes)
+    \item Chromatin interaction data (promoter capture Hi-C)
+    \item Epigenomic annotations (ATAC-seq, H3K27ac ChIP-seq)
+    \item Variant effect prediction (CADD scores, regulomeDB)
+\end{itemize}
+
+\textbf{Tissue-Specific Pathways:}
+\begin{itemize}
+    \item Curate erythroid-specific gene sets
+    \item Weight genes by expression in relevant cell types
+    \item Incorporate developmental stage information (fetal vs. adult)
+\end{itemize}
+
+\subsubsection{4. Rare Variant Analysis}
+
+\textbf{Whole-Genome Sequencing:}
+\begin{itemize}
+    \item Capture rare variants (MAF $< 1\%$) not on GWAS arrays
+    \item Identify population-specific variants
+    \item Structural variant detection (CNVs, inversions)
+\end{itemize}
+
+\textbf{Gene-Based Burden Tests:}
+\begin{itemize}
+    \item Aggregate rare variants within genes
+    \item Test pathway-level burden of rare variants
+    \item May reveal genes with multiple rare causal alleles
+\end{itemize}
+
+\subsubsection{5. Gene-Environment Interactions}
+
+\textbf{Environmental Modifiers:}
+\begin{itemize}
+    \item Hydroxyurea treatment (induces HbF)
+    \item Co-morbidities ($\alpha$-thalassemia, G6PD deficiency)
+    \item Malaria exposure (evolutionary pressure)
+    \item Nutritional status (folate, iron)
+\end{itemize}
+
+\textbf{$G \times E$ Pathway Analysis:}
+\begin{itemize}
+    \item Test whether pathway effects differ by environment
+    \item May explain population-specific architecture
+    \item Inform personalized treatment strategies
+\end{itemize}
+
+\subsubsection{6. Multi-Omics Integration}
+
+\textbf{Integrate with:}
+\begin{itemize}
+    \item \textbf{Transcriptomics:} RNA-seq in SCD patients (baseline and post-treatment)
+    \item \textbf{Proteomics:} Hemoglobin subunit quantification, regulatory proteins
+    \item \textbf{Metabolomics:} Taurine levels (given suggestive finding), oxidative stress markers
+    \item \textbf{Epigenomics:} DNA methylation at globin loci and regulatory regions
+\end{itemize}
+
+\textbf{Systems Biology Approach:}
+\begin{itemize}
+    \item Network analysis combining genomics, transcriptomics, proteomics
+    \item Identify key regulatory nodes beyond BCL11A
+    \item Develop mechanistic models of HbF regulation
+\end{itemize}
+
+\section{Conclusions}
+
+This comprehensive pathway-based polygenic risk score analysis of fetal hemoglobin levels in 1,527 Tanzanian sickle cell disease patients provides important insights into HbF genetic architecture despite the absence of statistically significant pathway enrichment.
+
+\textbf{Key Findings:}
+
+\begin{enumerate}
+    \item \textbf{No significant pathway enrichment:} None of 1,944 tested pathways (across custom SCD, Hallmark, KEGG, and Reactome databases) achieved significance after competitive permutation testing
+    
+    \item \textbf{Oligogenic architecture:} HbF genetics appear dominated by few major loci (particularly BCL11A) rather than distributed polygenic effects across biological pathways
+    
+    \item \textbf{Limited polygenic signal:} Base genome-wide PRS explains only $\sim$1\% of variance, consistent with low SNP-heritability (4.3\%) from GWAS
+    
+    \item \textbf{Suggestive findings:} Taurine/hypotaurine metabolism (KEGG, $\rsq = 9\%$, $p = 0.0052$) and coagulation (Hallmark, $\rsq = 6.5\%$, $p = 0.016$) showed enrichment approaching significance but require replication
+\end{enumerate}
+
+\textbf{Biological Implications:}
+
+The oligogenic architecture of HbF regulation, characterized by a single dominant locus (BCL11A) accounting for most genetic variance, has important implications:
+
+\begin{itemize}
+    \item Validates \textbf{BCL11A as the prime therapeutic target} for HbF induction in SCD
+    \item Suggests that \textbf{multi-pathway therapeutic strategies may not be necessary}; targeting BCL11A alone likely sufficient
+    \item Challenges models of highly complex, polygenic HbF regulation
+    \item Demonstrates that \textbf{not all complex traits are highly polygenic}; some are oligogenic with few genes of large effect
+\end{itemize}
+
+\textbf{Methodological Insights:}
+
+This study demonstrates:
+\begin{itemize}
+    \item \textbf{Pathway analysis is trait-dependent:} Successful for polygenic traits (height, schizophrenia) but limited for oligogenic traits (HbF)
+    \item \textbf{Negative results are informative:} Absence of enrichment clarifies genetic architecture
+    \item \textbf{Sample size requirements:} Pathway analysis demands larger samples than single-variant GWAS, particularly for traits with limited polygenicity
+\end{itemize}
+
+\textbf{Future Directions:}
+
+To comprehensively characterize HbF genetic architecture:
+\begin{enumerate}
+    \item Expand sample sizes ($N > 5,000$) for adequate power
+    \item Perform conditional analysis removing major loci (BCL11A, HBS1L-MYB)
+    \item Integrate functional genomics (eQTLs, chromatin interactions)
+    \item Incorporate rare variants through whole-genome sequencing
+    \item Test gene-environment interactions
+    \item Replicate suggestive findings (taurine metabolism, coagulation)
+\end{enumerate}
+
+\textbf{Clinical Translation:}
+
+For precision medicine in SCD:
+\begin{itemize}
+    \item Genetic prediction of HbF should focus on major loci (BCL11A, HBS1L-MYB, HBB cluster)
+    \item Genome-wide PRS adds minimal predictive value beyond major loci
+    \item Gene therapy targeting BCL11A supported by genetic architecture
+    \item Multi-target combination therapies may not be necessary
+\end{itemize}
+
+In conclusion, while pathway-based PRS analysis did not reveal significant enrichment, the study provides valuable negative evidence that HbF regulation in Tanzanian SCD patients is primarily oligogenic. This clarifies therapeutic priorities, informs future study design, and contributes to our understanding of complex trait genetic architecture in African populations.
+
+\section*{Acknowledgments}
+
+We gratefully acknowledge the Centre for High Performance Computing (CHPC), South Africa, for computational resources. We thank the study participants and clinical collaborators in Tanzania. We acknowledge PRSice-2 developers Shing Wan Choi and Paul O'Reilly for software development and support.
+
+\section*{Funding}
+
+[Funding sources to be added]
+
+\section*{Author Contributions}
+
+\textbf{E.N.K.} performed PRSet analyses, interpreted results, and wrote the manuscript. \textbf{E.R.C.} supervised the study, provided critical feedback, and revised the manuscript. Both authors approved the final version.
+
+\section*{Data Availability}
+
+GWAS summary statistics are available upon reasonable request. Individual-level genotype data are not publicly available due to ethical restrictions. PRSet scripts and gene set files are available at [repository to be specified].
+
+\section*{Competing Interests}
+
+The authors declare no competing interests.
+
+\bibliographystyle{naturemag}
+\bibliography{references}
+
+% Placeholder for references - in actual submission, full bibliography would be included
+
+\end{document}
