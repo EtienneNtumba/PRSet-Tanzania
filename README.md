@@ -245,7 +245,7 @@ The analysis generated comprehensive visualizations showing variance explained b
 
 #### Custom Sickle Cell Disease Pathways
 
-![Custom SCD Pathways](figures/custom_sicklecell_MULTISET_BARPLOT_2025-12-09.png)
+![Custom SCD Pathways](custom_sicklecell_MULTISET_BARPLOT_2025-12-09.png)
 
 **Key observations:**
 - SICKLECELL_FETAL_HB_REGULATORS: Highest among custom sets (R² = 2.4%)
@@ -255,7 +255,7 @@ The analysis generated comprehensive visualizations showing variance explained b
 
 #### Hallmark Gene Sets
 
-![Hallmark Pathways](figures/hallmark_MULTISET_BARPLOT_2025-12-09.png)
+![Hallmark Pathways](hallmark_MULTISET_BARPLOT_2025-12-09.png)
 
 **Key observations:**
 - HALLMARK_COAGULATION: Highest overall R² = 6.5% (comp. p = 0.016)
@@ -265,7 +265,7 @@ The analysis generated comprehensive visualizations showing variance explained b
 
 #### KEGG Metabolic Pathways
 
-![KEGG Pathways](figures/kegg_MULTISET_BARPLOT_2025-12-09.png)
+![KEGG Pathways](kegg_MULTISET_BARPLOT_2025-12-09.png)
 
 **Key observations:**
 - KEGG_TAURINE_HYPOTAURINE_METABOLISM: **Highest R² = 9.0%** (comp. p = 0.0052)
@@ -275,7 +275,7 @@ The analysis generated comprehensive visualizations showing variance explained b
 
 #### Reactome Signaling Pathways
 
-![Reactome Pathways](figures/reactome_MULTISET_BARPLOT_2025-12-09.png)
+![Reactome Pathways](reactome_MULTISET_BARPLOT_2025-12-09.png)
 
 **Key observations:**
 - REACTOME_BLOOD_GROUP_SYSTEMS_BIOSYNTHESIS shows highest enrichment
@@ -409,7 +409,7 @@ install.packages(c(
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourusername/tanzania-hbf-prset.git
+git clone https://github.com/entumba/tanzania-hbf-prset.git
 cd tanzania-hbf-prset
 ```
 
@@ -667,8 +667,7 @@ Northumbria University, Newcastle upon Tyne, UK
 Department of Human Genetics  
 McGill University, Montreal, QC, Canada  
 📧 etienne.kabongo@mcgill.ca  
-🔗 [GitHub](https://github.com/yourusername)  
-🔗 [LinkedIn](https://linkedin.com/in/yourprofile)
+🔗 [GitHub](https://github.com/EtienneNtumba)  
 
 ---
 
@@ -695,7 +694,7 @@ We welcome contributions to improve analysis pipelines and documentation:
 
 ### Issues
 
-Report bugs or request features via [GitHub Issues](https://github.com/yourusername/tanzania-hbf-prset/issues).
+Report bugs or request features via [GitHub Issues](https://github.com/EtienneNtumba/tanzania-hbf-prset/issues).
 
 ---
 
